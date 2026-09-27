@@ -1,0 +1,380 @@
+{
+  "good_unit": {
+    "unit_id": "good_unit",
+    "overall_status": "UNCERTAIN",
+    "checks": [
+      {
+        "check_id": "POLYBAG_PRESENCE",
+        "requirement_name": "Polybag present and sealed",
+        "verdict": "PASS",
+        "reason": "A sealed polybag enclosing the product was detected.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 99.9,
+              "y1": 100.1,
+              "x2": 800.1,
+              "y2": 599.9
+            },
+            "description": "Translucent polybag enclosing the product",
+            "source": "vlm"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 99.9,
+              "y1": 133.0,
+              "x2": 800.1,
+              "y2": 154.0
+            },
+            "description": "Seal region",
+            "source": "vlm"
+          }
+        ],
+        "rule_id": "POLYBAG_PRESENCE",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "SUFFOCATION_WARNING",
+        "requirement_name": "Suffocation warning present and legible",
+        "verdict": "PASS",
+        "reason": "Suffocation warning label is present, visible, and OCR confirms legible warning text.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 320.4,
+              "y1": 200.2,
+              "x2": 620.0999999999999,
+              "y2": 300.3
+            },
+            "description": "White warning label with red WARNING text",
+            "source": "vlm"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 336.0,
+              "y1": 216.0,
+              "x2": 496.5,
+              "y2": 238.0
+            },
+            "description": "OCR read: \"WARNING\"",
+            "source": "ocr"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 336.0,
+              "y1": 253.0,
+              "x2": 444.5,
+              "y2": 263.0
+            },
+            "description": "OCR read: \"SUFFOCATION\"",
+            "source": "ocr"
+          }
+        ],
+        "rule_id": "SUFFOCATION_WARNING",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "FNSKU_PLACEMENT",
+        "requirement_name": "FNSKU label placed correctly",
+        "verdict": "PASS",
+        "reason": "FNSKU label is present, flat, off seam/edge, and legible.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 350.1,
+              "y1": 399.7,
+              "x2": 590.4,
+              "y2": 469.70000000000005
+            },
+            "description": "White FNSKU label flat on the front face",
+            "source": "vlm"
+          }
+        ],
+        "rule_id": "FNSKU_PLACEMENT",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "PACKAGING_MATERIAL_THICKNESS",
+        "requirement_name": "Polybag material thickness (NOT visually verifiable)",
+        "verdict": "UNCERTAIN",
+        "reason": "This requirement cannot be reliably established from the supplied photographs.",
+        "evidence": [],
+        "rule_id": "PACKAGING_MATERIAL_THICKNESS",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": false,
+        "review_required": false,
+        "resolution_hint": "This property requires physical inspection, not photographic evidence."
+      }
+    ],
+    "failed_checks": [],
+    "uncertain_checks": [
+      "PACKAGING_MATERIAL_THICKNESS"
+    ],
+    "evidence_count": 6,
+    "rule_version": "RULES_V1",
+    "model_version": "SIMULATED (no ANTHROPIC_API_KEY in this sandbox)",
+    "prompt_version": "VISION_PROMPT_V1",
+    "analysis_id": "demo-good_unit",
+    "timestamp": "2026-09-27T10:21:12.732866"
+  },
+  "fnsku_on_edge_unit": {
+    "unit_id": "fnsku_on_edge_unit",
+    "overall_status": "FAIL",
+    "checks": [
+      {
+        "check_id": "POLYBAG_PRESENCE",
+        "requirement_name": "Polybag present and sealed",
+        "verdict": "PASS",
+        "reason": "A sealed polybag enclosing the product was detected.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 99.9,
+              "y1": 100.1,
+              "x2": 800.1,
+              "y2": 599.9
+            },
+            "description": "Translucent polybag enclosing the product",
+            "source": "vlm"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 99.9,
+              "y1": 133.0,
+              "x2": 800.1,
+              "y2": 154.0
+            },
+            "description": "Seal region",
+            "source": "vlm"
+          }
+        ],
+        "rule_id": "POLYBAG_PRESENCE",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "SUFFOCATION_WARNING",
+        "requirement_name": "Suffocation warning present and legible",
+        "verdict": "PASS",
+        "reason": "Suffocation warning label is present, visible, and OCR confirms legible warning text.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 320.4,
+              "y1": 200.2,
+              "x2": 620.0999999999999,
+              "y2": 300.3
+            },
+            "description": "White warning label",
+            "source": "vlm"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 336.0,
+              "y1": 216.0,
+              "x2": 496.5,
+              "y2": 238.0
+            },
+            "description": "OCR read: \"WARNING\"",
+            "source": "ocr"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 336.0,
+              "y1": 253.0,
+              "x2": 444.5,
+              "y2": 263.0
+            },
+            "description": "OCR read: \"SUFFOCATION\"",
+            "source": "ocr"
+          }
+        ],
+        "rule_id": "SUFFOCATION_WARNING",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "FNSKU_PLACEMENT",
+        "requirement_name": "FNSKU label placed correctly",
+        "verdict": "FAIL",
+        "reason": "FNSKU label placement overlaps the package edge, which prevents reliable scanning.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 700.2,
+              "y1": 399.7,
+              "x2": 860.4,
+              "y2": 469.70000000000005
+            },
+            "description": "FNSKU label positioned right at the package's right edge",
+            "source": "vlm"
+          },
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 700.2,
+              "y1": 399.7,
+              "x2": 860.4,
+              "y2": 469.70000000000005
+            },
+            "description": "Geometry: Region is within -80px of the package boundary.",
+            "source": "geometry"
+          }
+        ],
+        "rule_id": "FNSKU_PLACEMENT",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "PACKAGING_MATERIAL_THICKNESS",
+        "requirement_name": "Polybag material thickness (NOT visually verifiable)",
+        "verdict": "UNCERTAIN",
+        "reason": "This requirement cannot be reliably established from the supplied photographs.",
+        "evidence": [],
+        "rule_id": "PACKAGING_MATERIAL_THICKNESS",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": false,
+        "review_required": false,
+        "resolution_hint": "This property requires physical inspection, not photographic evidence."
+      }
+    ],
+    "failed_checks": [
+      "FNSKU_PLACEMENT"
+    ],
+    "uncertain_checks": [
+      "PACKAGING_MATERIAL_THICKNESS"
+    ],
+    "evidence_count": 7,
+    "rule_version": "RULES_V1",
+    "model_version": "SIMULATED (no ANTHROPIC_API_KEY in this sandbox)",
+    "prompt_version": "VISION_PROMPT_V1",
+    "analysis_id": "demo-fnsku_on_edge_unit",
+    "timestamp": "2026-09-27T10:21:13.129426"
+  },
+  "missing_polybag_unit": {
+    "unit_id": "missing_polybag_unit",
+    "overall_status": "FAIL",
+    "checks": [
+      {
+        "check_id": "POLYBAG_PRESENCE",
+        "requirement_name": "Polybag present and sealed",
+        "verdict": "FAIL",
+        "reason": "No polybag was detected enclosing the product.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": null,
+            "description": "No polybag visible anywhere around the product",
+            "source": "vlm"
+          }
+        ],
+        "rule_id": "POLYBAG_PRESENCE",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": true,
+        "review_required": false,
+        "resolution_hint": null
+      },
+      {
+        "check_id": "SUFFOCATION_WARNING",
+        "requirement_name": "Suffocation warning present and legible",
+        "verdict": "UNCERTAIN",
+        "reason": "Warning-label region was not clearly identified.",
+        "evidence": [],
+        "rule_id": "SUFFOCATION_WARNING",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": false,
+        "review_required": true,
+        "resolution_hint": "Capture a photo showing the full polybag surface where a warning label would be."
+      },
+      {
+        "check_id": "FNSKU_PLACEMENT",
+        "requirement_name": "FNSKU label placed correctly",
+        "verdict": "UNCERTAIN",
+        "reason": "FNSKU label placement looks acceptable but the code could not be confidently read/matched.",
+        "evidence": [
+          {
+            "image_id": "img1",
+            "bbox": {
+              "x1": 350.1,
+              "y1": 399.7,
+              "x2": 590.4,
+              "y2": 469.70000000000005
+            },
+            "description": "FNSKU label flat on the front face",
+            "source": "vlm"
+          }
+        ],
+        "rule_id": "FNSKU_PLACEMENT",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": false,
+        "review_required": true,
+        "resolution_hint": "Capture a closer, well-lit photo directly facing the FNSKU label."
+      },
+      {
+        "check_id": "PACKAGING_MATERIAL_THICKNESS",
+        "requirement_name": "Polybag material thickness (NOT visually verifiable)",
+        "verdict": "UNCERTAIN",
+        "reason": "This requirement cannot be reliably established from the supplied photographs.",
+        "evidence": [],
+        "rule_id": "PACKAGING_MATERIAL_THICKNESS",
+        "rule_version": "RULES_V1",
+        "source": "DEMO_SAMPLE_RULESET (not an authoritative compliance source)",
+        "visual_evidence_sufficient": false,
+        "review_required": false,
+        "resolution_hint": "This property requires physical inspection, not photographic evidence."
+      }
+    ],
+    "failed_checks": [
+      "POLYBAG_PRESENCE"
+    ],
+    "uncertain_checks": [
+      "SUFFOCATION_WARNING",
+      "FNSKU_PLACEMENT",
+      "PACKAGING_MATERIAL_THICKNESS"
+    ],
+    "evidence_count": 2,
+    "rule_version": "RULES_V1",
+    "model_version": "SIMULATED (no ANTHROPIC_API_KEY in this sandbox)",
+    "prompt_version": "VISION_PROMPT_V1",
+    "analysis_id": "demo-missing_polybag_unit",
+    "timestamp": "2026-09-27T10:21:13.364836"
+  }
+}

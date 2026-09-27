@@ -1,0 +1,76 @@
+{
+  "scores": {
+    "POLYBAG_PRESENCE": {
+      "check_id": "POLYBAG_PRESENCE",
+      "total": 3,
+      "accuracy": 1.0,
+      "uncertain_rate": 0.0,
+      "coverage": 1.0,
+      "precision_fail": 1.0,
+      "recall_fail": 1.0,
+      "f1_fail": 1.0,
+      "false_fail_count": 0,
+      "false_pass_count": 0,
+      "confusion_matrix": {
+        "truth=PASS/pred=PASS": 2,
+        "truth=FAIL/pred=FAIL": 1
+      }
+    },
+    "SUFFOCATION_WARNING": {
+      "check_id": "SUFFOCATION_WARNING",
+      "total": 3,
+      "accuracy": 1.0,
+      "uncertain_rate": 0.3333333333333333,
+      "coverage": 0.6666666666666666,
+      "precision_fail": null,
+      "recall_fail": null,
+      "f1_fail": null,
+      "false_fail_count": 0,
+      "false_pass_count": 0,
+      "confusion_matrix": {
+        "truth=PASS/pred=PASS": 2,
+        "truth=UNCERTAIN/pred=UNCERTAIN": 1
+      }
+    },
+    "FNSKU_PLACEMENT": {
+      "check_id": "FNSKU_PLACEMENT",
+      "total": 3,
+      "accuracy": 1.0,
+      "uncertain_rate": 0.3333333333333333,
+      "coverage": 0.6666666666666666,
+      "precision_fail": 1.0,
+      "recall_fail": 1.0,
+      "f1_fail": 1.0,
+      "false_fail_count": 0,
+      "false_pass_count": 0,
+      "confusion_matrix": {
+        "truth=PASS/pred=PASS": 1,
+        "truth=FAIL/pred=FAIL": 1,
+        "truth=UNCERTAIN/pred=UNCERTAIN": 1
+      }
+    },
+    "PACKAGING_MATERIAL_THICKNESS": {
+      "check_id": "PACKAGING_MATERIAL_THICKNESS",
+      "total": 3,
+      "accuracy": 1.0,
+      "uncertain_rate": 1.0,
+      "coverage": 0.0,
+      "precision_fail": null,
+      "recall_fail": null,
+      "f1_fail": null,
+      "false_fail_count": 0,
+      "false_pass_count": 0,
+      "confusion_matrix": {
+        "truth=UNCERTAIN/pred=UNCERTAIN": 3
+      }
+    },
+    "_overall": {
+      "total_check_evaluations": 12,
+      "accuracy_across_all_checks": 1.0,
+      "uncertain_rate_across_all_checks": 0.4166666666666667,
+      "total_false_passes": 0,
+      "total_false_fails": 0
+    }
+  },
+  "failures": []
+}

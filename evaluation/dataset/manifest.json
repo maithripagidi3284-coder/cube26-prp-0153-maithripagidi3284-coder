@@ -1,0 +1,62 @@
+{
+  "_comment": "DEMO manifest (spec section 39 asks for >=50 units with independent human labels from a real held-out photo set; this repo only ships 3 synthetic fixtures, so treat this file as the SCHEMA proof, not a real evaluation set). Extending this to a real 50+-unit set means adding entries here with real image paths and human-reviewed ground_truth per check_id -- runner.py and metrics.py do not change.",
+  "units": [
+    {
+      "unit_id": "good_unit",
+      "image_paths": ["backend/tests/fixtures/good_unit.jpg"],
+      "product_meta": {
+        "prep_type": "polybag+label",
+        "fnsku": "X0DEMO1234",
+        "manufacturer_barcode": null,
+        "expiry_required": false,
+        "barcode_coverage_required": false,
+        "handling_marks": []
+      },
+      "ground_truth": {
+        "POLYBAG_PRESENCE": "PASS",
+        "SUFFOCATION_WARNING": "PASS",
+        "FNSKU_PLACEMENT": "PASS",
+        "PACKAGING_MATERIAL_THICKNESS": "UNCERTAIN"
+      },
+      "labeled_by": ["demo-reviewer-1"]
+    },
+    {
+      "unit_id": "fnsku_on_edge_unit",
+      "image_paths": ["backend/tests/fixtures/fnsku_on_edge_unit.jpg"],
+      "product_meta": {
+        "prep_type": "polybag+label",
+        "fnsku": "X0DEMO1234",
+        "manufacturer_barcode": null,
+        "expiry_required": false,
+        "barcode_coverage_required": false,
+        "handling_marks": []
+      },
+      "ground_truth": {
+        "POLYBAG_PRESENCE": "PASS",
+        "SUFFOCATION_WARNING": "PASS",
+        "FNSKU_PLACEMENT": "FAIL",
+        "PACKAGING_MATERIAL_THICKNESS": "UNCERTAIN"
+      },
+      "labeled_by": ["demo-reviewer-1"]
+    },
+    {
+      "unit_id": "missing_polybag_unit",
+      "image_paths": ["backend/tests/fixtures/missing_polybag_unit.jpg"],
+      "product_meta": {
+        "prep_type": "polybag+label",
+        "fnsku": "X0DEMO1234",
+        "manufacturer_barcode": null,
+        "expiry_required": false,
+        "barcode_coverage_required": false,
+        "handling_marks": []
+      },
+      "ground_truth": {
+        "POLYBAG_PRESENCE": "FAIL",
+        "SUFFOCATION_WARNING": "UNCERTAIN",
+        "FNSKU_PLACEMENT": "UNCERTAIN",
+        "PACKAGING_MATERIAL_THICKNESS": "UNCERTAIN"
+      },
+      "labeled_by": ["demo-reviewer-1"]
+    }
+  ]
+}

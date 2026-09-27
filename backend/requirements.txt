@@ -1,0 +1,14 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0
+pydantic>=2.7
+pillow>=10.0
+opencv-python-headless>=4.9
+pytesseract>=0.3.10
+pyzbar>=0.1.9
+numpy>=1.26
+httpx>=0.27
+python-multipart>=0.0.9
+pytest>=8.0
+psycopg[binary]>=3.2
+python-dotenv>=1.0
