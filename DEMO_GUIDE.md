@@ -73,3 +73,17 @@ Backend: `http://localhost:8008`
 ## Important security note
 
 Never commit `.env` or paste API keys / database passwords into source control. `.gitignore` already excludes `.env`, local databases, and runtime images.
+
+
+### 0. Create an account / log in
+
+Open the frontend at `http://localhost:8080`. The authentication screen appears before the existing Prep Manager workspace.
+
+1. Select **Sign Up** and create an account, or use **Login** for an existing account.
+2. After authentication, the existing dashboard and inspection workflow open unchanged.
+3. **All Units**, **Reports**, uploaded images, results and audit history are scoped to the signed-in account.
+4. Log out from the account panel to return to the authentication screen.
+5. A logged-out browser cannot create inspections, upload images, analyze units, view stored evidence, or access reports.
+
+For Docker, the backend is exposed to the browser at `http://localhost:8008` while the application container listens internally on port `8000`.
+

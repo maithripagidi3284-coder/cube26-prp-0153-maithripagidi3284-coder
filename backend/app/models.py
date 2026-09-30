@@ -28,7 +28,10 @@ class User(Base):
     __tablename__ = "users"
     id = Column(String, primary_key=True, default=uid)
     organization_id = Column(String, ForeignKey("organizations.id"), nullable=False, index=True)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=False, index=True)
+    name = Column(String, nullable=False, default="Operator")
+    password_hash = Column(String, nullable=False, default="")
+    password_salt = Column(String, nullable=False, default="")
     role = Column(String, default="operator")  # operator | reviewer | admin
     created_at = Column(DateTime, default=datetime.utcnow)
 

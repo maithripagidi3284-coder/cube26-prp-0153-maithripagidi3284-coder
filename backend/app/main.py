@@ -1,13 +1,12 @@
 """
-API layer (spec section 34). Tenant scoping (spec section 32) is enforced by
-requiring an X-Org-Id header on every request and filtering every query by
-it — this is the SQLite-dev-mode equivalent of Postgres row-level security;
-see docs/postgres_rls.sql for the production policy that makes this
-unbypassable at the database layer rather than the application layer.
+API layer (spec section 34). Authenticated account identity determines the
+workspace scope for protected inspection data. Tenant-scoped queries continue
+to filter by organization_id, with Postgres row-level security available for
+production database enforcement; see docs/postgres_rls.sql.
 
-Auth is intentionally minimal here (header-based org/user identification)
-so the hackathon demo isn't gated on a full auth system — swapping in real
-authentication means replacing get_current_org/get_current_user only.
+Authentication uses signed bearer sessions backed by user accounts. Passwords
+are hashed with per-user salts, and protected inspection/image/report routes
+require an authenticated session.
 """
 import time
 import uuid
@@ -19,10 +18,11 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Hea
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 
 from app.db import get_db, init_db
-from app import models, config, storage
-from app.schemas import ReviewSubmission, Verdict, RulebookCreate
+from app import models, config, storage, auth
+from app.schemas import ReviewSubmission, Verdict, RulebookCreate, SignupRequest, LoginRequest
 from app.rules.registry import REQUIREMENTS
 from app.services.pipeline import run_analysis, PipelinePendingReview
 
@@ -37,8 +37,71 @@ _METRICS = {"analyses_run": 0, "total_latency_ms": 0.0, "latencies_ms": []}
 
 @app.on_event("startup")
 def _startup():
-    init_db()
-    _seed_demo_org()
+    # Docker can briefly start the database service before its DNS/accept loop
+    # is fully ready. Retry startup DB work without changing application behavior.
+    last_error = None
+    for attempt in range(15):
+        try:
+            init_db()
+            _migrate_auth_schema()
+            _seed_demo_org()
+            return
+        except OperationalError as exc:
+            last_error = exc
+            logger.warning("Database not ready (attempt %d/15); retrying...", attempt + 1)
+            time.sleep(2)
+    raise last_error
+
+
+def _migrate_auth_schema():
+    """Add auth columns when upgrading an existing SQLite/Postgres demo DB."""
+    from sqlalchemy import inspect, text
+    from app.db import engine, SessionLocal
+    inspector = inspect(engine)
+    with engine.begin() as conn:
+        user_cols = {c["name"] for c in inspector.get_columns("users")}
+        additions = {
+            "name": "VARCHAR NOT NULL DEFAULT 'Operator'",
+            "password_hash": "VARCHAR NOT NULL DEFAULT ''",
+            "password_salt": "VARCHAR NOT NULL DEFAULT ''",
+        }
+        for col, ddl in additions.items():
+            if col not in user_cols:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {ddl}"))
+    db = SessionLocal()
+    try:
+        for user in db.query(models.User).all():
+            if not user.name:
+                user.name = "Operator"
+        db.commit()
+    finally:
+        db.close()
+
+
+def _seed_rulebooks_for_org(db, org_id: str):
+    presets = [
+        (
+            "Standard Polybag + Label",
+            "Demo preset covering common photo-verifiable polybag and label checks.",
+            ["POLYBAG_PRESENCE", "SUFFOCATION_WARNING", "FNSKU_PLACEMENT",
+             "ORIGINAL_BARCODE_COVERAGE", "HANDLING_MARKS", "PACKAGING_MATERIAL_THICKNESS"],
+        ),
+        (
+            "Polybag Only",
+            "Demo preset for units that require a polybag but not an FNSKU label.",
+            ["POLYBAG_PRESENCE", "SUFFOCATION_WARNING", "PACKAGING_MATERIAL_THICKNESS"],
+        ),
+        (
+            "Label + Barcode",
+            "Demo preset focused on fulfillment label placement and original barcode visibility.",
+            ["FNSKU_PLACEMENT", "ORIGINAL_BARCODE_COVERAGE"],
+        ),
+    ]
+    for name, description, rule_ids in presets:
+        if not db.query(models.Rulebook).filter_by(organization_id=org_id, name=name).first():
+            db.add(models.Rulebook(
+                organization_id=org_id, name=name, description=description, rule_ids=rule_ids,
+            ))
 
 
 def _seed_demo_org():
@@ -49,47 +112,36 @@ def _seed_demo_org():
         if not org:
             db.add(models.Organization(id="demo-org", name="Demo Organization"))
             db.commit()
-
-        presets = [
-            (
-                "Standard Polybag + Label",
-                "Demo preset covering common photo-verifiable polybag and label checks.",
-                [
-                    "POLYBAG_PRESENCE", "SUFFOCATION_WARNING", "FNSKU_PLACEMENT",
-                    "ORIGINAL_BARCODE_COVERAGE", "HANDLING_MARKS",
-                    "PACKAGING_MATERIAL_THICKNESS",
-                ],
-            ),
-            (
-                "Polybag Only",
-                "Demo preset for units that require a polybag but not an FNSKU label.",
-                [
-                    "POLYBAG_PRESENCE", "SUFFOCATION_WARNING",
-                    "PACKAGING_MATERIAL_THICKNESS",
-                ],
-            ),
-            (
-                "Label + Barcode",
-                "Demo preset focused on fulfillment label placement and original barcode visibility.",
-                ["FNSKU_PLACEMENT", "ORIGINAL_BARCODE_COVERAGE"],
-            ),
-        ]
-        for name, description, rule_ids in presets:
-            if not db.query(models.Rulebook).filter_by(organization_id="demo-org", name=name).first():
-                db.add(models.Rulebook(
-                    organization_id="demo-org", name=name, description=description, rule_ids=rule_ids,
-                ))
+        _seed_rulebooks_for_org(db, "demo-org")
         db.commit()
     finally:
         db.close()
 
 
-def get_current_org(x_org_id: str = Header(default="demo-org")) -> str:
-    return x_org_id
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
 
 
-def get_current_user(x_user_id: str = Header(default="demo-operator")) -> str:
-    return x_user_id
+def get_current_user(
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> str:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Authentication required")
+    user_id = auth.verify_token(authorization[7:].strip())
+    if not user_id:
+        raise HTTPException(401, "Invalid or expired session")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(401, "Account not found")
+    return user.id
+
+
+def get_current_org(user_id: str = Depends(get_current_user), db: Session = Depends(get_db)) -> str:
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(401, "Account not found")
+    return user.organization_id
 
 
 def _scoped(query, model, org_id):
@@ -99,6 +151,58 @@ def _scoped(query, model, org_id):
 def _audit(db: Session, org_id: str, unit_id: str, event_type: str, payload: dict):
     db.add(models.AuditEvent(organization_id=org_id, unit_id=unit_id, event_type=event_type, payload=payload))
     db.commit()
+
+
+# -------------------------------------------------------------- authentication -
+@app.post("/auth/signup")
+def signup(payload: SignupRequest, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(400, "Enter a valid email address")
+    if len(payload.password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
+    if db.query(models.User).filter(models.User.email == email).first():
+        raise HTTPException(409, "An account with this email already exists")
+
+    org = models.Organization(id=str(uuid.uuid4()), name=f"{payload.name.strip()}'s Workspace")
+    password_hash, password_salt = auth.hash_password(payload.password)
+    user = models.User(
+        organization_id=org.id,
+        email=email,
+        name=payload.name.strip(),
+        password_hash=password_hash,
+        password_salt=password_salt,
+        role="operator",
+    )
+    db.add(org)
+    db.add(user)
+    db.flush()
+    _seed_rulebooks_for_org(db, org.id)
+    db.commit()
+    return {
+        "access_token": auth.create_token(user.id),
+        "token_type": "bearer",
+        "user": {"id": user.id, "name": user.name, "email": user.email},
+    }
+
+
+@app.post("/auth/login")
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user or not auth.verify_password(payload.password, user.password_hash, user.password_salt):
+        raise HTTPException(401, "Incorrect email or password")
+    return {
+        "access_token": auth.create_token(user.id),
+        "token_type": "bearer",
+        "user": {"id": user.id, "name": user.name, "email": user.email},
+    }
+
+
+@app.get("/auth/me")
+def me(user_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    return {"id": user.id, "name": user.name, "email": user.email}
 
 
 # ------------------------------------------------------------------ health -
@@ -208,7 +312,7 @@ def create_unit(
     handling_marks: str = Form(""),  # comma-separated
     work_order_reference: str = Form(""),
     rulebook_id: str = Form(""),
-    org_id: str = Depends(get_current_org), db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org), user_id: str = Depends(get_current_user), db: Session = Depends(get_db),
 ):
     selected_rule_ids = None
     selected_rulebook_name = None

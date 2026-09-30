@@ -1,10 +1,15 @@
-services:
+﻿services:
   db:
     image: postgres:16
     environment:
       POSTGRES_USER: prep_manager
       POSTGRES_PASSWORD: prep_manager
       POSTGRES_DB: prep_manager
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prep_manager -d prep_manager"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
     ports:
       - "5432:5432"
     volumes:
@@ -13,10 +18,12 @@ services:
   backend:
     build: .
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+psycopg://prep_manager:prep_manager@db:5432/prep_manager
-      GROQ_API_KEY: ${GROQ_API_KEY:-}
       PREP_MANAGER_VISION_MODEL: qwen/qwen3.8-27b
       PREP_MANAGER_STORAGE_DIR: /data/images
     ports:

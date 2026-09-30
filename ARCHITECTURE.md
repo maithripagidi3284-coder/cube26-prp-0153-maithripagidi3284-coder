@@ -25,7 +25,7 @@ separate and auditable.
                     └─────────┬────────────┘
                               │
                     ┌─────────▼────────────┐
-     ONE call  ---> │  Vision evidence      │  Claude vision API, structured
+     ONE call  ---> │  Vision evidence      │  Groq multimodal vision API, structured
                     │  extraction           │  JSON only, NEVER outputs a
                     │  (vision/client.py)   │  verdict — objects only
                     └─────────┬────────────┘
@@ -86,7 +86,7 @@ This flow is implemented literally in `services/pipeline.py::run_analysis`.
 ## 5. Model flow — why one call per unit
 
 `vision/client.py` sends every image for a unit plus the expected
-identifiers in a single Anthropic API request (spec section 29). The model
+identifiers in a single Groq API request (spec section 29). The model
 is instructed (see `vision/prompts.py`) to return ONLY a JSON object of
 `DetectedObject`-shaped entries — it is explicitly told it is not a
 compliance authority and must never output PASS/FAIL. If the model can't
@@ -231,3 +231,15 @@ uses (no evaluation-only shortcuts) against a manifest of units with
 ground-truth per-check labels, and scores per-check precision/recall/F1
 (FAIL as the positive class), uncertain rate, coverage, and a
 false-pass/false-fail breakdown — never just one aggregate accuracy number.
+
+
+## Authentication & tenant isolation
+
+Round 2 adds an authentication boundary without changing the existing inspection pipeline.
+
+- Accounts are created through `/auth/signup` and authenticated through `/auth/login`.
+- Passwords use PBKDF2-HMAC-SHA256 with a per-user random salt.
+- Protected API routes require a signed bearer session token.
+- Each account receives its own organization/workspace ID; existing organization scoping therefore isolates units, images, results, evidence, reports and audit history.
+- The frontend does not accept an operator-supplied organization ID for authorization. The backend derives the organization from the authenticated account.
+- Logging out clears the browser session token. The existing vision, OCR, barcode, geometry, deterministic rule engine and review workflow are unchanged.

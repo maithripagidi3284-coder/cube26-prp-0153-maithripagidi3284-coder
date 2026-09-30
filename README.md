@@ -41,8 +41,7 @@ including the real bugs found and fixed while building this.
   overwritten (`backend/app/storage.py`)
 - Image quality gate — blur / brightness / resolution
   (`backend/app/quality/engine.py`)
-- One-call-per-unit vision evidence extraction against the real Anthropic
-  API, with fail-open behavior verified live
+- One-call-per-unit vision evidence extraction against the live Groq API, with fail-open behavior verified live
   (`backend/app/vision/client.py`)
 - OCR (Tesseract), barcode decode (zbar), geometry analysis (OpenCV edge/
   seam detection using the detected package boundary)
@@ -67,9 +66,7 @@ including the real bugs found and fixed while building this.
 - **OCR engine**: Tesseract instead of the spec-suggested PaddleOCR — swap
   by replacing `backend/app/ocr/engine.py` only; the `OCRResult` contract
   doesn't change.
-- **Auth**: header-based org/user identification (`X-Org-Id`, `X-User-Id`)
-  rather than full session/JWT auth — see `main.py::get_current_org`'s
-  docstring for what to replace.
+- **Auth**: JWT-like bearer session authentication with per-user workspaces; the original header-based tenant demo has been replaced with account-backed authentication.
 - **Dev database**: SQLite with application-layer tenant filtering; apply
   `docs/postgres_rls.sql` after switching `DATABASE_URL` to Postgres for
   database-enforced isolation.
@@ -144,8 +141,8 @@ python -m pytest tests/ -v
 python scripts/generate_demo_images.py   # regenerate synthetic fixtures
 python scripts/run_demo.py               # runs the full pipeline; uses a
                                           # clearly-labeled simulated VLM
-                                          # response if ANTHROPIC_API_KEY
-                                          # isn't set, real calls if it is
+                                          # response if GROQ_API_KEY
+                                          # isn't set, real Groq calls if the key is configured
 ```
 
 ### Evaluation
@@ -159,7 +156,7 @@ cat evaluation/latest_report.json
 
 ```bash
 docker compose up --build
-# backend:  http://localhost:8000
+# backend (host): http://localhost:8008
 # frontend: http://localhost:8080
 ```
 
@@ -182,8 +179,7 @@ production-grade tenant isolation.
 | GET | `/requirements` | The current rule registry |
 | GET | `/health`, `/metrics` | Health check, latency stats |
 
-Every endpoint requires an `X-Org-Id` header (defaults to `demo-org` if
-omitted, seeded automatically on startup).
+Protected inspection endpoints require an authenticated bearer session. The account determines the workspace scope; clients do not choose an organization with `X-Org-Id`.
 
 ## Vision pipeline
 
@@ -199,6 +195,17 @@ is decided by plain Python, never by thresholding a confidence score, and
 a requirement that genuinely can't be judged from a photo (e.g. material
 thickness) always returns UNCERTAIN — never a guessed PASS or FAIL.
 
+## Authentication
+
+Prep Manager now requires an authenticated account for inspections and stored evidence.
+
+- **Sign up / Login:** Create an account with a name, email and password.
+- **Private workspace:** Each account receives its own workspace/tenant, so inspection history, uploaded images, results, reports and audit events are isolated from other accounts.
+- **Protected operations:** Unit creation, image upload, analysis, results, evidence, reports and reviews require an authenticated bearer session.
+- **Password storage:** Passwords are stored as PBKDF2-HMAC-SHA256 hashes with per-user salts; plaintext passwords are never stored.
+- **Session:** The browser keeps the signed session token for the current account. Logging out removes the local session and returns to the authentication screen.
+- **Deployment:** Set `PREP_MANAGER_AUTH_SECRET` to a long random secret before deployment.
+
 ## Limitations
 
 See `EVALUATION.md`'s "Known limitations" section — most importantly, the
@@ -209,8 +216,7 @@ held-out photo set, and should not be read as real-world accuracy.
 
 `docker-compose.yml` runs Postgres + the FastAPI backend + the static
 frontend behind nginx. Apply `docs/postgres_rls.sql` once against the
-Postgres database for tenant isolation. Set `ANTHROPIC_API_KEY` in the
-environment (never commit it — see `.env.example`).
+Postgres database for tenant isolation. Set `GROQ_API_KEY` and `PREP_MANAGER_AUTH_SECRET` in the environment (never commit either — see `.env.example`).
 
 ## Demo
 

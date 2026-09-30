@@ -43,3 +43,6 @@ TESSERACT_CMD = os.getenv("TESSERACT_CMD", "")
 RULE_ENGINE_VERSION = "RULES_V1"
 PROMPT_VERSION = "VISION_PROMPT_V1"
 SOFTWARE_VERSION = "prep-manager-0.2.0"
+# Authentication — keep this secret in deployment environment variables.
+AUTH_SECRET = os.getenv("PREP_MANAGER_AUTH_SECRET", "prep-manager-dev-auth-secret-change-me")
+AUTH_TOKEN_TTL_SECONDS = int(os.getenv("PREP_MANAGER_AUTH_TOKEN_TTL", str(7 * 24 * 60 * 60)))

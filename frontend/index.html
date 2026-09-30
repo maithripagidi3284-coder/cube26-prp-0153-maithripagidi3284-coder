@@ -61,9 +61,38 @@
 
   @media (max-width:1050px){#sidebar{width:260px;flex-basis:260px}#main{padding:22px}.kpi-grid{grid-template-columns:repeat(3,1fr)}.two-col,.create-wrap,.modal-grid{grid-template-columns:1fr}.rulebook-grid{grid-template-columns:1fr 1fr}.overview-grid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:760px){body{display:block}#sidebar{position:relative;width:100%;max-height:none;min-height:auto}.unit-row .meta{white-space:normal}#main{padding:18px}.checks-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.rulebook-grid{grid-template-columns:1fr}.page-head,.unit-header{flex-direction:column}.stamp-banner{align-items:flex-start;flex-direction:column}.stamp-banner .meta{text-align:left}.report-row{grid-template-columns:1fr}.overview-grid{grid-template-columns:1fr 1fr}}
+
+  /* Authentication layer — keeps the existing Prep Manager visual language. */
+  #auth-screen{position:fixed;inset:0;z-index:500;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:24px}
+  #auth-card{width:min(960px,94vw);display:grid;grid-template-columns:1.05fr .95fr;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 24px 70px rgba(22,35,47,.18)}
+  #auth-brand{background:var(--blueprint);color:#fff;padding:48px 42px;display:flex;flex-direction:column;justify-content:center}
+  #auth-brand h1{font-size:48px;margin:4px 0 8px}.auth-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:#9fb3c4}.auth-copy{color:#c8d3dc;font-size:13px;line-height:1.7;max-width:430px}
+  .auth-points{margin:24px 0 0;padding:0;list-style:none;display:grid;gap:11px}.auth-points li{font-size:12px;color:#d8e0e6}.auth-points li::before{content:'✓';color:#8cd19e;font-weight:800;margin-right:9px}
+  #auth-panel{padding:40px}.auth-tabs{display:flex;gap:6px;margin-bottom:24px}.auth-tab{flex:1;padding:10px;border:1px solid var(--line);background:#f8f5ec;color:var(--ink-soft);border-radius:4px;font-weight:700;font-size:12px}.auth-tab.active{background:var(--blueprint);border-color:var(--blueprint);color:#fff}
+  #auth-panel h2{font-size:30px;margin:0 0 5px}.auth-sub{font-size:12px;color:var(--ink-soft);margin-bottom:20px}.auth-form{display:grid;gap:12px}.auth-form label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}.auth-form input{width:100%;padding:11px;border:1px solid var(--line);border-radius:4px;margin-top:5px}.auth-submit{padding:12px;border:0;border-radius:4px;background:var(--stamp);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase}.auth-error{min-height:18px;color:var(--fail);font-size:11px}.auth-note{font-size:10px;color:var(--ink-soft);line-height:1.5;margin-top:8px}
+  #account-bar{padding:12px 18px;border-top:1px solid var(--blueprint-3);color:#d8e0e6;font-size:11px}#account-bar strong{display:block;color:#fff;font-size:13px;margin-bottom:2px}.account-actions{display:flex;gap:6px;margin-top:8px}.account-actions button{flex:1;padding:7px 8px;border:1px solid var(--blueprint-3);background:var(--blueprint-2);color:#fff;border-radius:3px;font-size:11px}
+  @media(max-width:800px){#auth-card{grid-template-columns:1fr}#auth-brand{display:none}#auth-panel{padding:28px}}
 </style>
 </head>
-<body>
+<body><div id="auth-screen">
+  <div id="auth-card">
+    <section id="auth-brand">
+      <div class="auth-eyebrow">Secure AI-assisted warehouse workflow</div>
+      <h1>Prep Manager</h1>
+      <p class="auth-copy">Sign in to your private compliance workspace. Your inspections, uploaded evidence, reports and audit history stay associated with your account.</p>
+      <ul class="auth-points">
+        <li>Private inspection history per account</li>
+        <li>Authenticated image upload and verification</li>
+        <li>Existing evidence, rules and review workflow preserved</li>
+      </ul>
+    </section>
+    <section id="auth-panel">
+      <div class="auth-tabs"><button id="login-tab" class="auth-tab active" onclick="showAuthMode('login')">Login</button><button id="signup-tab" class="auth-tab" onclick="showAuthMode('signup')">Sign Up</button></div>
+      <div id="auth-form-area"></div>
+    </section>
+  </div>
+</div>
+
 <aside id="sidebar">
   <div id="sidebar-header"><div class="eyebrow">AI-assisted warehouse workflow</div><h1>Prep Manager</h1><p>Visual preparation compliance console with evidence, review and audit history.</p></div>
   <div class="sidebar-actions"><button class="primary-side" onclick="showCreateForm()">+ New Inspection</button></div>
@@ -75,9 +104,9 @@
   </div>
   <div id="batch-bar"><div><strong>Batch queue</strong> · select units below</div><button id="batch-analyze-btn" disabled onclick="batchAnalyze()">Analyze Selected (0)</button></div>
   <div id="unit-list"></div>
-  <div id="api-config">
+  <div id="account-bar" style="display:none"><strong id="account-name">—</strong><span id="account-email">—</span><div class="account-actions"><button onclick="logout()">Log out</button></div></div><div id="api-config">
     <label>API base URL</label><input id="api-base" value="http://127.0.0.1:8008" onchange="boot()">
-    <label>Org ID</label><input id="org-id" value="demo-org" onchange="boot()">
+    <input id="org-id" type="hidden" value="">
     <div id="connection-status" class="offline">● checking backend…</div>
   </div>
 </aside>
@@ -94,15 +123,92 @@
 <div id="modal-backdrop" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
 
 <script>
-const state={units:[],rulebooks:[],requirements:[],selectedUnitId:null,selectedUnitMeta:null,selectedResult:null,selectedEvidence:null,audit:[],selectedBatchIds:new Set(),currentView:'dashboard'};
+const state={user:null,authMode:'login',units:[],rulebooks:[],requirements:[],selectedUnitId:null,selectedUnitMeta:null,selectedResult:null,selectedEvidence:null,audit:[],selectedBatchIds:new Set(),currentView:'dashboard'};
 function apiBase(){return document.getElementById('api-base').value.replace(/\/$/,'')}
-function headers(extra){return Object.assign({'X-Org-Id':document.getElementById('org-id').value},extra||{})}
+function authToken(){return localStorage.getItem('prep_manager_token')||''}
+function headers(extra){const h=Object.assign({},extra||{});const token=authToken();if(token)h.Authorization=`Bearer ${token}`;return h}
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function fmtDate(s){try{return new Date(s).toLocaleString()}catch{return s||''}}
-async function request(url,opts={}){const r=await fetch(url,Object.assign({headers:headers()},opts));let d=null;try{d=await r.json()}catch{}if(r.status===202)return d;if(!r.ok)throw new Error(d?.detail?.reason||d?.detail||`HTTP ${r.status}`);return d}
+async function request(url,opts={}){
+  const finalOpts=Object.assign({},opts);
+  finalOpts.headers=Object.assign(headers(),opts.headers||{});
+  const r=await fetch(url,finalOpts);
+  let d=null;try{d=await r.json()}catch{}
+  if(r.status===401){localStorage.removeItem('prep_manager_token');state.user=null;showAuthScreen();throw new Error(d?.detail||'Session expired. Please log in again.')}
+  if(r.status===202)return d;
+  if(!r.ok)throw new Error(d?.detail?.reason||d?.detail||`HTTP ${r.status}`);
+  return d;
+}
+async function hydrateProtectedImages(root){
+  const imgs=[...(root||document).querySelectorAll('img[data-protected-image]')];
+  await Promise.all(imgs.map(async img=>{
+    const imageId=img.dataset.protectedImage;
+    if(!imageId)return;
+    try{
+      const r=await fetch(`${apiBase()}/images/${imageId}`,{headers:headers()});
+      if(r.status===401){
+        localStorage.removeItem('prep_manager_token');
+        state.user=null;
+        showAuthScreen();
+        return;
+      }
+      if(!r.ok){img.alt='Image unavailable';return}
+      const blob=await r.blob();
+      const objectUrl=URL.createObjectURL(blob);
+      img.src=objectUrl;
+      img.addEventListener('load',()=>URL.revokeObjectURL(objectUrl),{once:true});
+    }catch(e){
+      img.alt='Image unavailable';
+    }
+  }));
+}
+function showAuthMode(mode){
+  state.authMode=mode;
+  document.getElementById('login-tab').classList.toggle('active',mode==='login');
+  document.getElementById('signup-tab').classList.toggle('active',mode==='signup');
+  const signup=mode==='signup';
+  document.getElementById('auth-form-area').innerHTML=`<h2>${signup?'Create your account':'Welcome back'}</h2>
+    <div class="auth-sub">${signup?'Create a private Prep Manager workspace.':'Sign in to continue to your private Prep Manager workspace.'}</div>
+    <form class="auth-form" onsubmit="return submitAuth(event)">
+      ${signup?'<label>Name<input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Your name"></label>':''}
+      <label>Email<input name="email" required type="email" autocomplete="${signup?'email':'username'}" placeholder="you@example.com"></label>
+      <label>Password<input name="password" required type="password" minlength="${signup?'8':'1'}" autocomplete="${signup?'new-password':'current-password'}" placeholder="${signup?'At least 8 characters':'Your password'}"></label>
+      <div id="auth-error" class="auth-error"></div>
+      <button class="auth-submit" type="submit">${signup?'Create Account':'Log In'}</button>
+    </form>
+    <div class="auth-note">Your inspection records are stored under your authenticated workspace. Do not share your account credentials.</div>`;
+}
+function showAuthScreen(){
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('account-bar').style.display='none';
+  showAuthMode(state.authMode||'login');
+}
+function hideAuthScreen(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('account-bar').style.display='block';
+  document.getElementById('account-name').textContent=state.user?.name||'Operator';
+  document.getElementById('account-email').textContent=state.user?.email||'';
+}
+async function submitAuth(ev){
+  ev.preventDefault();
+  const form=ev.target, button=form.querySelector('button[type=submit]'), error=document.getElementById('auth-error');
+  error.textContent='';button.disabled=true;button.textContent=state.authMode==='signup'?'Creating…':'Signing in…';
+  try{
+    const body={email:form.email.value.trim(),password:form.password.value};
+    if(state.authMode==='signup')body.name=form.name.value.trim();
+    const data=await request(`${apiBase()}/auth/${state.authMode}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    localStorage.setItem('prep_manager_token',data.access_token);state.user=data.user;hideAuthScreen();await boot();
+  }catch(e){error.textContent=e.message}finally{button.disabled=false;button.textContent=state.authMode==='signup'?'Create Account':'Log In'}
+  return false;
+}
+function logout(){
+  localStorage.removeItem('prep_manager_token');state.user=null;state.units=[];state.selectedUnitId=null;state.selectedUnitMeta=null;state.selectedResult=null;state.selectedEvidence=null;state.audit=[];showAuthScreen();
+}
 async function boot(){
-  try{await request(`${apiBase()}/health`);document.getElementById('connection-status').textContent='● backend online';document.getElementById('connection-status').className='online'}
-  catch(e){document.getElementById('connection-status').textContent='● backend offline';document.getElementById('connection-status').className='offline'}
+  const token=authToken();
+  if(!token){showAuthScreen();return}
+  try{state.user=await request(`${apiBase()}/auth/me`);hideAuthScreen();document.getElementById('connection-status').textContent='● backend online';document.getElementById('connection-status').className='online'}
+  catch(e){showAuthScreen();return}
   await Promise.all([refreshUnits(),refreshRulebooks(),loadRequirements()]);
   if(!state.selectedUnitId) showView(state.currentView||'dashboard');
 }
@@ -150,10 +256,10 @@ async function selectUnit(id){state.selectedUnitId=id;try{state.selectedUnitMeta
 function renderUnitView(){const u=state.selectedUnitMeta,r=state.selectedResult;const el=document.getElementById('unit-view');const checks=r?.checks||[];const pass=checks.filter(c=>c.verdict==='PASS').length,fail=checks.filter(c=>c.verdict==='FAIL').length,unc=checks.filter(c=>c.verdict==='UNCERTAIN').length;const banner=r?`<div class="stamp-banner ${r.overall_status}"><div><div class="status">${r.overall_status}</div><div style="font-size:11px;color:var(--ink-soft)">${fail?`${fail} rule failure(s) · `:''}${unc?`${unc} rule(s) need review · `:''}${pass} pass</div></div><div class="meta">rule ${escapeHtml(r.rule_version)} · model ${escapeHtml(r.model_version)}<br>${r.evidence_count} evidence items · analysis ${escapeHtml(r.analysis_id.slice(0,8))}</div></div>`:`<div class="notice info">This unit has not been analyzed yet. Uploads are stored; use <strong>Analyze Prep</strong> to run Groq vision + OCR + geometry + deterministic rules.</div>`;const rulebook=u.product.rulebook_name?`<span class="rule-chip">Rulebook · ${escapeHtml(u.product.rulebook_name)}</span>`:'<span class="rule-chip">Default rule resolution</span>';
 el.innerHTML=`<div class="unit-header"><div><div class="eyebrow">Inspection detail</div><h2>${escapeHtml(u.product.sku||u.unit_id)}</h2><div class="sub">FNSKU ${escapeHtml(u.product.fnsku||'—')} · ASIN ${escapeHtml(u.product.asin||'—')} · ${u.images.length} photo(s)</div><div style="margin-top:7px">${rulebook}</div></div><div class="actions"><button class="btn" onclick="downloadReport('${u.unit_id}')">Download Report</button><button class="btn" onclick="printReport('${u.unit_id}')">Print / Save PDF</button><button id="analyze-btn" class="btn dark" onclick="analyzeUnit('${u.unit_id}')">Analyze Prep</button></div></div>${banner}<div class="overview-grid"><div class="overview-item"><strong>${pass}</strong><span>Pass checks</span></div><div class="overview-item"><strong>${fail}</strong><span>Fail checks</span></div><div class="overview-item"><strong>${unc}</strong><span>Needs review</span></div><div class="overview-item"><strong>${state.selectedEvidence?.objects?.length||0}</strong><span>Visual objects</span></div></div>
   ${checks.length?`<div class="checks-grid">${checks.map(c=>`<div class="check-card" onclick="openCheckModal('${c.check_id}')"><div class="top"><div class="name">${escapeHtml(c.requirement_name)}</div><span class="badge ${c.verdict}">${c.verdict}</span></div><div class="reason">${escapeHtml(c.reason)}</div><div class="rule">${escapeHtml(c.rule_id)} · ${escapeHtml(c.rule_version)}</div>${c.resolution_hint?`<div class="fix-strip"><strong>Fix:</strong> ${escapeHtml(c.resolution_hint)}</div>`:''}</div>`).join('')}</div>`:'<div class="panel"><div class="empty">No result yet.</div></div>'}
-  <div class="panel" style="margin-top:16px"><h3>Inspection photos</h3><div class="photo-strip">${u.images.map(im=>`<div class="photo-card"><img src="${apiBase()}/images/${im.image_id}" alt="Inspection photo"><div class="cap"><span>${escapeHtml(im.image_id.slice(0,8))}</span><span>${im.width}×${im.height}</span></div></div>`).join('')}</div></div>
-  <div class="panel"><h3>Audit history</h3>${state.audit.length?`<table class="audit-table"><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody>${state.audit.map(a=>`<tr><td>${fmtDate(a.created_at)}</td><td><strong>${escapeHtml(a.event_type)}</strong></td><td class="mono">${escapeHtml(JSON.stringify(a.payload||{}))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No audit events yet.</div>'}</div>`}
+  <div class="panel" style="margin-top:16px"><h3>Inspection photos</h3><div class="photo-strip">${u.images.map(im=>`<div class="photo-card"><img data-protected-image="${im.image_id}" alt="Inspection photo"><div class="cap"><span>${escapeHtml(im.image_id.slice(0,8))}</span><span>${im.width}×${im.height}</span></div></div>`).join('')}</div></div>
+  <div class="panel"><h3>Audit history</h3>${state.audit.length?`<table class="audit-table"><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody>${state.audit.map(a=>`<tr><td>${fmtDate(a.created_at)}</td><td><strong>${escapeHtml(a.event_type)}</strong></td><td class="mono">${escapeHtml(JSON.stringify(a.payload||{}))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No audit events yet.</div>'}</div>`;hydrateProtectedImages(el)}
 async function analyzeUnit(id){const btn=document.getElementById('analyze-btn');btn.disabled=true;btn.textContent='Analyzing…';try{const d=await request(`${apiBase()}/units/${id}/analyze`,{method:'POST'});if(d?.status==='PENDING_REVIEW'||d?.detail?.status==='PENDING_REVIEW')alert('Analysis routed to review: '+(d?.reason||d?.detail?.reason||'evidence needs human review.'));await refreshUnits();await selectUnit(id)}catch(e){alert('Analysis could not complete: '+e.message);await refreshUnits();await selectUnit(id)}finally{const b=document.getElementById('analyze-btn');if(b){b.disabled=false;b.textContent='Analyze Prep'}}}
-function openCheckModal(checkId){const c=(state.selectedResult?.checks||[]).find(x=>x.check_id===checkId);if(!c)return;const modal=document.getElementById('modal');const imageGroups={};const dims={};(state.selectedUnitMeta?.images||[]).forEach(i=>dims[i.image_id]={w:i.width,h:i.height});(c.evidence||[]).forEach(e=>{(imageGroups[e.image_id]??=[]).push(e)});const firstImage=Object.keys(imageGroups)[0];let visual='';if(firstImage){const e=imageGroups[firstImage].find(x=>x.bbox)||imageGroups[firstImage][0];const d=dims[firstImage]||{w:1000,h:1000};const box=e?.bbox?`<div class="bbox" style="left:${e.bbox.x1/d.w*100}%;top:${e.bbox.y1/d.h*100}%;width:${(e.bbox.x2-e.bbox.x1)/d.w*100}%;height:${(e.bbox.y2-e.bbox.y1)/d.h*100}%"></div>`:'';visual=`<div class="evidence-visual"><div class="section-title">Visual evidence</div><div class="evidence-image"><img src="${apiBase()}/images/${firstImage}" alt="Evidence image">${box}</div><div class="muted" style="font-size:10px;margin-top:6px">Image ${escapeHtml(firstImage.slice(0,8))} · boxes are evidence regions, not verdicts.</div></div>`}else visual='<div class="evidence-visual"><div class="empty">No image-linked evidence was recorded for this check.</div></div>';
+function openCheckModal(checkId){const c=(state.selectedResult?.checks||[]).find(x=>x.check_id===checkId);if(!c)return;const modal=document.getElementById('modal');const imageGroups={};const dims={};(state.selectedUnitMeta?.images||[]).forEach(i=>dims[i.image_id]={w:i.width,h:i.height});(c.evidence||[]).forEach(e=>{(imageGroups[e.image_id]??=[]).push(e)});const firstImage=Object.keys(imageGroups)[0];let visual='';if(firstImage){const e=imageGroups[firstImage].find(x=>x.bbox)||imageGroups[firstImage][0];const d=dims[firstImage]||{w:1000,h:1000};const box=e?.bbox?`<div class="bbox" style="left:${e.bbox.x1/d.w*100}%;top:${e.bbox.y1/d.h*100}%;width:${(e.bbox.x2-e.bbox.x1)/d.w*100}%;height:${(e.bbox.y2-e.bbox.y1)/d.h*100}%"></div>`:'';visual=`<div class="evidence-visual"><div class="section-title">Visual evidence</div><div class="evidence-image"><img data-protected-image="${firstImage}" alt="Evidence image">${box}</div><div class="muted" style="font-size:10px;margin-top:6px">Image ${escapeHtml(firstImage.slice(0,8))} · boxes are evidence regions, not verdicts.</div></div>`}else visual='<div class="evidence-visual"><div class="empty">No image-linked evidence was recorded for this check.</div></div>';
 modal.innerHTML=`<button class="close" onclick="closeModal()">&times;</button><h3>${escapeHtml(c.requirement_name)}</h3><div style="margin:6px 0 14px"><span class="badge ${c.verdict}">${c.verdict}</span> <span style="font-size:12px;color:var(--ink-soft)">${escapeHtml(c.reason)}</span></div><div class="modal-grid">${visual}<div><div class="section-title">Evidence (${c.evidence.length})</div><div class="evidence-list">${c.evidence.length?c.evidence.map(e=>`<div class="evidence-item"><strong>${escapeHtml(e.source)}</strong> · ${escapeHtml(e.description)}${e.bbox?`<div class="mono" style="margin-top:3px;color:#8a8069">image ${escapeHtml(e.image_id.slice(0,8))} · [${Math.round(e.bbox.x1)}, ${Math.round(e.bbox.y1)}, ${Math.round(e.bbox.x2)}, ${Math.round(e.bbox.y2)}]</div>`:''}</div>`).join(''):'<div class="empty">No evidence items.</div>'}</div>${c.resolution_hint?`<div class="hint-box" style="margin-top:10px"><strong>Recommended fix:</strong><br>${escapeHtml(c.resolution_hint)}</div>`:''}<div class="section-title">Rule source</div><div style="font-size:11px">${escapeHtml(c.source)}<br><span class="mono" style="color:#8a8069">${escapeHtml(c.rule_id)} · ${escapeHtml(c.rule_version)}</span></div><div id="review-area" class="review-box"><strong style="font-size:12px">Human review</strong><div style="font-size:11px;color:var(--ink-soft);margin-top:3px">Record an explicit decision without overwriting the original AI verdict.</div><div class="review-actions" style="margin-top:9px"><button class="btn pass" onclick="showReviewForm('${c.check_id}','PASS')">Accept PASS</button><button class="btn fail" onclick="showReviewForm('${c.check_id}','FAIL')">Accept FAIL</button><button class="btn warn" onclick="showReviewForm('${c.check_id}','UNCERTAIN')">Request another image</button></div></div></div></div>`;
 document.getElementById('modal-backdrop').classList.add('open')}
 function showReviewForm(checkId,verdict){const a=document.getElementById('review-area');a.innerHTML=`<strong style="font-size:12px">${verdict==='UNCERTAIN'?'Request another image':'Record review decision'}</strong><textarea id="review-reason" placeholder="Explain why this decision was made…" required></textarea><div class="review-actions"><button class="btn dark" onclick="submitReview('${checkId}','${verdict}')">Save Review</button><button class="btn" onclick="openCheckModal('${checkId}')">Cancel</button></div>`;document.getElementById('review-reason').focus()}
