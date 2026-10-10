@@ -25,7 +25,24 @@ def _detect_lines(gray: np.ndarray) -> list:
     min_len = max(200, min(gray.shape) // 3)
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=MIN_LINE_VOTES,
                              minLineLength=min_len, maxLineGap=3)
-    return [] if lines is None else [l[0] for l in lines]
+    
+if lines is None:
+    return []
+
+line_array = np.asarray(lines)
+
+if line_array.size == 0:
+    return []
+
+try:
+    line_array = line_array.reshape(-1, 4)
+except ValueError:
+    return []
+
+return [
+    tuple(int(value) for value in line)
+    for line in line_array
+]
 
 
 def _line_band_mask(shape, line, thickness=10) -> np.ndarray:
