@@ -17,32 +17,39 @@ MIN_LINE_VOTES = 60          # Hough line detector vote threshold
 
 
 def _detect_lines(gray: np.ndarray) -> list:
-    """Looks for long, near-continuous straight edges (package seams/edges),
-    deliberately tuned to NOT bridge across small gaps — a small maxLineGap
-    keeps this from stitching printed text characters into a fake long
-    'line', which is a common false-positive source for this heuristic."""
+    """Detect long, near-continuous straight edges without joining small gaps."""
     edges = cv2.Canny(gray, 50, 150, apertureSize=3)
     min_len = max(200, min(gray.shape) // 3)
-    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=MIN_LINE_VOTES,
-                             minLineLength=min_len, maxLineGap=3)
-    
-if lines is None:
-    return []
 
-line_array = np.asarray(lines)
+    lines = cv2.HoughLinesP(
+        edges,
+        1,
+        np.pi / 180,
+        threshold=MIN_LINE_VOTES,
+        minLineLength=min_len,
+        maxLineGap=3,
+    )
 
-if line_array.size == 0:
-    return []
+    if lines is None:
+        return []
 
-try:
-    line_array = line_array.reshape(-1, 4)
-except ValueError:
-    return []
+    line_array = np.asarray(lines)
 
-return [
-    tuple(int(value) for value in line)
-    for line in line_array
-]
+    if line_array.size == 0:
+        return []
+
+    try:
+        line_array = line_array.reshape(-1, 4)
+    except ValueError:
+        return []
+
+    return [
+        tuple(int(value) for value in line)
+        for line in line_array
+    ]
+
+
+
 
 
 def _line_band_mask(shape, line, thickness=10) -> np.ndarray:
